@@ -1,0 +1,13 @@
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #004285;
+}
+
+#direction-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+}
