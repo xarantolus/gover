@@ -16,14 +16,14 @@ const port = "80"
 func main() {
 	var r = rover.Current()
 
-	defer func() {
-		if rec := recover(); rec != nil {
-			r.Stop()
+	// defer func() {
+	// 	if rec := recover(); rec != nil {
+	// 		r.Stop()
 
-			fmt.Println("Recovered panic, exiting:", rec)
-			os.Exit(1)
-		}
-	}()
+	// 		fmt.Println("Recovered panic, exiting:", rec)
+	// 		os.Exit(1)
+	// 	}
+	// }()
 
 	go func() {
 		for err := range r.Errors() {

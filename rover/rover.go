@@ -10,9 +10,16 @@ import (
 var singleRover *Rover
 
 type Rover struct {
+	// Channels
 	errorChan     chan OperationError
 	directionChan chan Direction
 
+	currentDirection Direction
+
+	// Sensors
+	sensorFrontMutex sync.Mutex
+
+	// Motor Controls
 	openMotorPins map[int]*rpi.Pin
 	motorsMutex   sync.Mutex
 	motorsLocked  bool
@@ -26,6 +33,9 @@ func Current() *Rover {
 			errorChan:     make(chan OperationError),
 			directionChan: make(chan Direction),
 
+			// Sensors
+			sensorFrontMutex: sync.Mutex{},
+
 			// Motor Controls
 			openMotorPins: make(map[int]*rpi.Pin),
 			motorsMutex:   sync.Mutex{},
@@ -33,6 +43,11 @@ func Current() *Rover {
 		}
 	}
 	return singleRover
+}
+
+// CurrentDirection gives the direction the robot is currently going
+func (r *Rover) CurrentDirection() Direction {
+	return r.currentDirection
 }
 
 // Errors returns the channel that will receive all errors
@@ -73,6 +88,8 @@ func (r *Rover) SetDirection(d Direction) {
 		r.Stop()
 	}
 
+	// change & notify of direction state
+	r.currentDirection = d
 	r.directionChan <- d
 }
 

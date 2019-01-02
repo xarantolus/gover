@@ -31,9 +31,24 @@ func CreateServer() *socketio.Server {
 
 	var rov = rover.Current()
 
+	// Send all directions to clients
 	go func() {
 		for dir := range rov.Directions() {
 			server.BroadcastTo(defaultRoom, "directionchanged", dir)
+		}
+	}()
+
+	// Send distance to clients
+	go func() {
+		for /* ever */ {
+			now := time.Now()
+			dist, ok := rov.DistanceFront()
+			server.BroadcastTo(defaultRoom, "sensor:front", sensorEvent{
+				Distance: dist,
+				Ok:       ok,
+			})
+			// Try to send this signal once per 1/2 second
+			time.Sleep(500*time.Millisecond - time.Now().Sub(now))
 		}
 	}()
 
@@ -41,6 +56,9 @@ func CreateServer() *socketio.Server {
 	server.On("connection", func(so socketio.Socket) {
 		so.Join(defaultRoom)
 		fmt.Printf("Connected client %s\n", so.Id())
+
+		// Send the initial direction
+		so.Emit("directionchanged", rov.CurrentDirection())
 
 		so.On("direction", func(d directionEvent) {
 			dir, ok := d.Direction()
@@ -89,6 +107,11 @@ type socketResponseErr struct {
 type directionEvent struct {
 	Date         time.Time `json:"date"`
 	RawDirection string    `json:"direction"`
+}
+
+type sensorEvent struct {
+	Ok       bool    `json:"ok"`
+	Distance float32 `json:"distance"`
 }
 
 var (

@@ -36,6 +36,10 @@ socket.on("directionchanged", function(newDirection){
     directionLabel.innerText = newDirection;
 });
 
+socket.on("sensor:front", function (frontUpdate) {
+    console.log(frontUpdate.ok + " " + frontUpdate.distance)
+})
+
 // Register events when connected
 socket.on("connect", function () {
     directionLabel.innerText = "Connected!";
@@ -100,6 +104,9 @@ socket.on("connect", function () {
     }
 });
 
+socket.on('disconnect', function() {
+    directionLabel.innerText = "Disconnected";
+});
 
 var lastDirection = null;
 var lastSendTime = new Date();
