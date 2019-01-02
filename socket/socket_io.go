@@ -38,17 +38,21 @@ func CreateServer() *socketio.Server {
 		}
 	}()
 
-	// Send distance to clients
+	// Read sensor and send distance to clients
 	go func() {
 		for /* ever */ {
-			now := time.Now()
-			dist, ok := rov.DistanceFront()
-			server.BroadcastTo(defaultRoom, "sensor:front", sensorEvent{
-				Distance: dist,
-				Ok:       ok,
-			})
-			// Try to send this signal once per 1/2 second
-			time.Sleep(500*time.Millisecond - time.Now().Sub(now))
+			if server.Count() > 0 {
+				now := time.Now()
+				dist, ok := rov.DistanceFront()
+				server.BroadcastTo(defaultRoom, "sensor:front", sensorEvent{
+					Distance: dist,
+					Ok:       ok,
+				})
+				// Try to send this signal once per 1/2 second
+				time.Sleep(500*time.Millisecond - time.Now().Sub(now))
+			} else {
+				time.Sleep(time.Second)
+			}
 		}
 	}()
 
