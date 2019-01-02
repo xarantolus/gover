@@ -34,6 +34,7 @@ func SocketIOServer() *socketio.Server {
 		fmt.Printf("Connected client %s\n", so.Id())
 
 		so.On("direction", func(d directionEvent) {
+			// TODO: Drop events that were made more than 2 seconds ago to make sure we don't lag behind
 			dir, ok := d.Direction()
 			if ok {
 				log.Printf("Direction: %v, duration=%s\n", dir, time.Now().Sub(d.Date))
