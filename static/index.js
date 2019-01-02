@@ -18,10 +18,10 @@ var directions = {
     // E: Pivot right
     69: "PIVOT_RIGHT",
 
-    // C: Reverse left
-    67: "REVERSE_LEFT",
-    // Z: Reverse right
-    89: "REVERSE_RIGHT",
+    // Z: Reverse left
+    89: "REVERSE_LEFT",
+    // C: Reverse right
+    67: "REVERSE_RIGHT",
 
     // Space bar is the brake
     32: STOP,
@@ -102,20 +102,23 @@ socket.on("connect", function () {
 
 
 var lastDirection = null;
+var lastSendTime = new Date();
 // GENERAL CONTROLS
 // moveDirection sends wanted direction to the server and updates the label
 function moveDirection(direction) {
-    if (direction == lastDirection) {
-        return;
-    }
-    lastDirection = direction;
-
     if (socket.disconnected) {
         return;
     }
 
+    if (new Date() - lastSendTime < 500 && direction == lastDirection) { // Only send every half second if it's the same
+        return;
+    }
+    lastDirection = direction;
+    lastSendTime = new Date();
+
+
     socket.emit("direction", {
-        "date": new Date(),
+        "date": lastSendTime,
         "direction": direction,
     });
 }
