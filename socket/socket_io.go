@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
-	"../controls"
+	"../rover"
 	"github.com/googollee/go-socket.io"
 )
 
@@ -17,8 +18,8 @@ var (
 
 const defaultRoom = "default"
 
-// SocketIOServer returns the current Socket.IO server
-func SocketIOServer() *socketio.Server {
+// CreateServer returns the current Socket.IO server
+func CreateServer() *socketio.Server {
 	if haveServer {
 		return server
 	}
@@ -28,27 +29,43 @@ func SocketIOServer() *socketio.Server {
 		panic(err)
 	}
 
+	var rov = rover.Current()
+
+	go func() {
+		for dir := range rov.Directions() {
+			server.BroadcastTo(defaultRoom, "directionchanged", dir)
+		}
+	}()
+
 	// Incoming connections
 	server.On("connection", func(so socketio.Socket) {
 		so.Join(defaultRoom)
 		fmt.Printf("Connected client %s\n", so.Id())
 
 		so.On("direction", func(d directionEvent) {
-			// TODO: Drop events that were made more than 2 seconds ago to make sure we don't lag behind
 			dir, ok := d.Direction()
-			if ok {
-				log.Printf("Direction: %v, duration=%s\n", dir, time.Now().Sub(d.Date))
-
-				// TODO: Actually change direction now
-
-				server.BroadcastTo(defaultRoom, "directionchanged", dir)
-				// so.BroadcastTo(defaultRoom, "directionchanged", dir)
+			if !ok {
+				fmt.Printf("Couldn't parse direction %s\n", d.RawDirection)
+				return
 			}
 
+			durationSinceSend := time.Now().Sub(d.Date)
+			log.Printf("Direction: %v, duration=%s\n", dir, durationSinceSend)
+
+			if durationSinceSend > 3*time.Second {
+				// Drop package
+				log.Println("Dropped package")
+				return
+			}
+
+			// Set the direction for the rover
+			rov.SetDirection(dir)
 		})
 
 		so.On("disconnection", func() {
 			log.Println("Disconnected")
+
+			rov.Stop()
 		})
 	})
 	// Log errors
@@ -74,15 +91,27 @@ type directionEvent struct {
 	RawDirection string    `json:"direction"`
 }
 
-var dirMap = map[string]controls.Direction{
-	"LEFT":  controls.LEFT,
-	"RIGHT": controls.RIGHT,
-	"FRONT": controls.FRONT,
-	"BACK":  controls.BACK,
-	"STOP":  controls.STOP,
-}
+var (
+	dirMap = map[string]rover.Direction{
+		"LEFT":    rover.Left,
+		"RIGHT":   rover.Right,
+		"FORWARD": rover.Forward,
+		"REVERSE": rover.Reverse,
 
-func (d *directionEvent) Direction() (dir controls.Direction, ok bool) {
+		"PIVOT_LEFT":  rover.PivotLeft,
+		"PIVOT_RIGHT": rover.PivotRight,
+
+		"REVERSE_LEFT":  rover.ReverseLeft,
+		"REVERSE_RIGHT": rover.ReverseRight,
+
+		"STOP": rover.Stop,
+	}
+	dirMapMut = sync.Mutex{}
+)
+
+func (d *directionEvent) Direction() (dir rover.Direction, ok bool) {
+	dirMapMut.Lock()
 	dir, ok = dirMap[strings.ToUpper(d.RawDirection)]
+	dirMapMut.Unlock()
 	return
 }
