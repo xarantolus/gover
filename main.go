@@ -21,6 +21,7 @@ func main() {
 			r.Stop()
 
 			fmt.Println("Recovered panic, exiting:", rec)
+			os.Exit(1)
 		}
 	}()
 
@@ -37,10 +38,10 @@ func main() {
 	fmt.Printf("Gover server listening on port %s\n", port)
 	go panic(http.ListenAndServe(":"+port, nil))
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 
-	<-signals
+	<-sc
 
 	fmt.Println("Stopping")
 	r.Stop()

@@ -21,7 +21,6 @@ func (r *Rover) getMotorPins() (map[int]*rpi.Pin, error) {
 		return nil, errMotorsInUse
 	}
 
-	println("Locking motor pins")
 	r.motorsMutex.Lock()
 	r.motorsLocked = true
 
@@ -40,10 +39,10 @@ func (r *Rover) closeMotorPins() {
 	for number, pin := range r.openMotorPins {
 		if pin != nil {
 			r.checkErr(pin.Close(), "closing pin %d", number)
+			delete(r.openMotorPins, number)
 		}
 	}
 	r.motorsLocked = false
-	println("Unlocking motor pins")
 	r.motorsMutex.Unlock()
 }
 

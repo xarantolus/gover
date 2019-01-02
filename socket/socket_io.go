@@ -52,9 +52,10 @@ func CreateServer() *socketio.Server {
 			durationSinceSend := time.Now().Sub(d.Date)
 			log.Printf("Direction: %v, duration=%s\n", dir, durationSinceSend)
 
-			if durationSinceSend > 3*time.Second {
+			// Only drop packages that aren't stop
+			if dir != rover.Stop && durationSinceSend > 3*time.Second {
 				// Drop package
-				log.Println("Dropped package")
+				fmt.Println("Dropped package")
 				return
 			}
 
@@ -63,8 +64,7 @@ func CreateServer() *socketio.Server {
 		})
 
 		so.On("disconnection", func() {
-			log.Println("Disconnected")
-
+			log.Println("Client disconnected, stopping rover")
 			rov.Stop()
 		})
 	})

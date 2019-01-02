@@ -23,7 +23,8 @@ func Current() *Rover {
 	if singleRover == nil {
 		// Rover creation
 		singleRover = &Rover{
-			errorChan: make(chan OperationError),
+			errorChan:     make(chan OperationError),
+			directionChan: make(chan Direction),
 
 			// Motor Controls
 			openMotorPins: make(map[int]*rpi.Pin),
