@@ -9,5 +9,22 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1em;
+    font-size: 2em;
+}
+
+#front-cm {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+}
+
+#car-image {
+    margin-top: 2.5%;
+    height: 70%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
 }

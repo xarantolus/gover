@@ -27,17 +27,39 @@ var directions = {
     32: STOP,
 }
 
+var directionDeg = {
+    "LEFT": -20,
+    "RIGHT": 20,
+
+    "FORWARD": 0,
+    "REVERSE": 180,
+
+    "PIVOT_LEFT": -120,
+    "PIVOT_RIGHT": 120,
+
+    "REVERSE_LEFT": 20,
+    "REVERSE_RIGHT": -20,
+
+    STOP: 0,
+}
 
 var directionLabel = document.getElementById("direction-label")
 
 var socket = io();
 
-socket.on("directionchanged", function(newDirection){
+socket.on("directionchanged", function (newDirection) {
     directionLabel.innerText = newDirection;
+    rotateCar(newDirection);
 });
 
+var frontSensor = document.getElementById("front-cm")
 socket.on("sensor:front", function (frontUpdate) {
-    console.log(frontUpdate.ok + " " + frontUpdate.distance)
+    var text = "No data available";
+    if (frontUpdate.ok) {
+        text = frontUpdate.distance.toFixed(2).toString() + "cm"
+    }
+
+    frontSensor.innerText = text;
 })
 
 // Register events when connected
@@ -104,8 +126,9 @@ socket.on("connect", function () {
     }
 });
 
-socket.on('disconnect', function() {
+socket.on('disconnect', function () {
     directionLabel.innerText = "Disconnected";
+    frontSensor.innerText =  "No data available";
 });
 
 var lastDirection = null;
@@ -128,4 +151,21 @@ function moveDirection(direction) {
         "date": lastSendTime,
         "direction": direction,
     });
+}
+
+var carImage = document.getElementById("car-image")
+
+function rotateCar(newDir) {
+    var newDeg = directionDeg[newDir];
+    
+    if (newDeg != null) {
+        var transfromString = "rotate(" + newDeg + "deg)";
+        console.log(transfromString);
+
+        carImage.style.webkitTransform = transfromString;
+        carImage.style.MozTransform = transfromString;
+        carImage.style.msTransform = transfromString;
+        carImage.style.OTransform = transfromString;
+        carImage.style.transform = transfromString;
+    }
 }
