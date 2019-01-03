@@ -67,9 +67,19 @@ func (r *Rover) DistanceFront() (cm float32, ok bool) {
 
 	// According to https://cdn.sparkfun.com/datasheets/Sensors/Proximity/HCSR04.pdf the range is from 2cm-400cm -> we say it's not ok
 	if dist < 2 || dist > 400 {
+		// cannot set last front distance as we don't know if we're far away or too near - the last value will take care of this
+		// we still set the date to make sure the rover doesn't run into a wall after waiting 2 seconds
+		r.sensorFrontLastDate = time.Now()
 		return 0, false
 	}
 
+	r.sensorFrontLastDistance = dist
+	r.sensorFrontLastDate = time.Now()
+
+	// Check if there's something in front of us and stop the motors in case there is, but only when we're going in that direction
+	if r.currentDirection == Forward {
+		r.canGoForward()
+	}
 	return dist, true
 }
 

@@ -1,6 +1,8 @@
 package rover
 
 import (
+	"time"
+
 	"github.com/nathan-osman/go-rpigpio"
 )
 
@@ -85,8 +87,22 @@ func (r *Rover) outputMotors(val1, val2, val3, val4 bool) error {
 	return nil
 }
 
-func (r *Rover) forward() {
-	r.checkErr(r.outputMotors(false, true, true, false), "going forward")
+// canGoForward checks if the robot can go forward and stops it if it can't
+func (r *Rover) canGoForward() (canGo bool) {
+	// Make sure the rover doesn't run straight into a wall if we have a recent distance
+	if r.sensorFrontLastDistance < roverMinFrontDistanceCM && time.Now().Sub(r.sensorFrontLastDate) < 2*time.Second {
+		r.SetDirection(Stop)
+		return false
+	}
+	return true
+}
+
+func (r *Rover) forward() (ok bool) {
+	if r.canGoForward() {
+		r.checkErr(r.outputMotors(false, true, true, false), "going forward")
+		return true
+	}
+	return false
 }
 
 func (r *Rover) reverse() {

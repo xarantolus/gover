@@ -3,6 +3,7 @@ package rover
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	rpi "github.com/nathan-osman/go-rpigpio"
 )
@@ -11,6 +12,10 @@ import (
 var (
 	singleRover      *Rover
 	ErrRoverShutdown = fmt.Errorf("The rover is shutting down")
+
+	// don't allow going forward when the front distance is lower than this
+	// 25 is perfect for the speed. If the rover catches the wall about 20cm before hitting it, it has enough time to "brake"
+	roverMinFrontDistanceCM float32 = 25
 )
 
 type Rover struct {
@@ -29,7 +34,9 @@ type Rover struct {
 	openLEDPins      map[int]*rpi.Pin
 
 	// Sensors
-	sensorFrontMutex sync.Mutex
+	sensorFrontMutex        sync.Mutex
+	sensorFrontLastDistance float32
+	sensorFrontLastDate     time.Time
 
 	// Motor Controls
 	openMotorPins map[int]*rpi.Pin
@@ -56,7 +63,9 @@ func Current() *Rover {
 			openLEDPins:      make(map[int]*rpi.Pin),
 
 			// Sensors
-			sensorFrontMutex: sync.Mutex{},
+			sensorFrontMutex:        sync.Mutex{},
+			sensorFrontLastDistance: 100, // Allow going forward from the beginning
+			sensorFrontLastDate:     time.Now(),
 
 			// Motor Controls
 			openMotorPins: make(map[int]*rpi.Pin),
@@ -89,13 +98,15 @@ func (r *Rover) SetDirection(d Direction) {
 		r.Stop()
 	}
 
+	var success = true
 	switch d {
 	case Left:
 		r.turnLeft()
 	case Right:
 		r.turnRight()
 	case Forward:
-		r.forward()
+		// Forward might cancel itself
+		success = r.forward()
 	case Reverse:
 		r.reverse()
 	case PivotLeft:
@@ -110,9 +121,11 @@ func (r *Rover) SetDirection(d Direction) {
 		r.Stop()
 	}
 
-	// change & notify of direction state
-	r.currentDirection = d
-	r.directionChan <- d
+	if success {
+		// change & notify of direction state
+		r.currentDirection = d
+		r.directionChan <- d
+	}
 }
 
 // Stop stops the motors
