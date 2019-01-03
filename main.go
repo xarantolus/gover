@@ -16,33 +16,43 @@ const port = "80"
 func main() {
 	var r = rover.Current()
 
-	// defer func() {
-	// 	if rec := recover(); rec != nil {
-	// 		r.Stop()
-
-	// 		fmt.Println("Recovered panic, exiting:", rec)
-	// 		os.Exit(1)
-	// 	}
-	// }()
-
+	// Print all erros the rover encounters
 	go func() {
 		for err := range r.Errors() {
 			fmt.Println("Error: " + err.Error())
 		}
 	}()
 
-	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/", fs)
-	http.Handle("/socket.io/", socket.CreateServer())
+	// Create web server
+	mux := http.NewServeMux()
 
-	fmt.Printf("Gover server listening on port %s\n", port)
-	go panic(http.ListenAndServe(":"+port, nil))
+	fs := http.FileServer(http.Dir("static"))
+	mux.Handle("/", fs)
+	mux.Handle("/socket.io/", socket.CreateServer())
+
+	server := http.Server{
+		Addr: ":" + port, Handler: mux,
+	}
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 
-	<-sc
+	// Wait for shutdown signals
+	go func() {
+		<-sc
 
-	fmt.Println("Stopping")
-	r.Stop()
+		fmt.Println("Received shutdown signal, stopping rover and http server")
+		// Shutdown rover & http server
+		r.Shutdown()
+
+		if err := server.Shutdown(nil); err != nil {
+			panic(fmt.Errorf("Error while shutting down web server: %s", err.Error()))
+		}
+	}()
+
+	fmt.Printf("Gover server listening on port %s\n", port)
+	err := server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		panic(err)
+	}
 }

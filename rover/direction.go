@@ -4,6 +4,8 @@ type Direction string
 
 // Direction for the robot
 const (
+	Stop Direction = "STOP"
+
 	Left  Direction = "LEFT"
 	Right Direction = "RIGHT"
 
@@ -15,6 +17,4 @@ const (
 
 	ReverseLeft  Direction = "REVERSE_LEFT"
 	ReverseRight Direction = "REVERSE_RIGHT"
-
-	Stop Direction = "STOP"
 )

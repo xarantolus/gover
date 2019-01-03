@@ -31,6 +31,11 @@ func (r *Rover) getMotorPins() (map[int]*rpi.Pin, error) {
 		r.checkPanic(err, "opening pin %d", pinNumber)
 	}
 
+	// Turn status led on as we're going to start the motors
+	if !r.IsFrontLEDOn() {
+		r.ToggleFrontLED()
+	}
+
 	return r.openMotorPins, nil
 }
 
@@ -38,12 +43,17 @@ func (r *Rover) getMotorPins() (map[int]*rpi.Pin, error) {
 func (r *Rover) closeMotorPins() {
 	for number, pin := range r.openMotorPins {
 		if pin != nil {
-			r.checkErr(pin.Close(), "closing pin %d", number)
+			r.checkErr(pin.Close(), "closing motor pin %d", number)
 			delete(r.openMotorPins, number)
 		}
 	}
 	r.motorsLocked = false
 	r.motorsMutex.Unlock()
+
+	// Turn status led off
+	if r.IsFrontLEDOn() {
+		r.ToggleFrontLED()
+	}
 }
 
 func (r *Rover) outputMotors(val1, val2, val3, val4 bool) error {

@@ -1,13 +1,17 @@
 package rover
 
 import (
+	"fmt"
 	"sync"
 
 	rpi "github.com/nathan-osman/go-rpigpio"
 )
 
 // singleRover is the Rover instance. Don't create another one
-var singleRover *Rover
+var (
+	singleRover      *Rover
+	ErrRoverShutdown = fmt.Errorf("The rover is shutting down")
+)
 
 type Rover struct {
 	// Channels
@@ -15,6 +19,14 @@ type Rover struct {
 	directionChan chan Direction
 
 	currentDirection Direction
+
+	// LEDs
+	frontLEDOn    bool
+	frontLEDMutex sync.Mutex
+
+	// Keep track of all leds (there's only one right now, so this is not very necessary)
+	openLEDPinsMutex sync.Mutex
+	openLEDPins      map[int]*rpi.Pin
 
 	// Sensors
 	sensorFrontMutex sync.Mutex
@@ -32,6 +44,16 @@ func Current() *Rover {
 		singleRover = &Rover{
 			errorChan:     make(chan OperationError),
 			directionChan: make(chan Direction),
+
+			// Initial direction
+			currentDirection: Stop,
+
+			// LEDs
+			frontLEDOn:    false,
+			frontLEDMutex: sync.Mutex{},
+
+			openLEDPinsMutex: sync.Mutex{},
+			openLEDPins:      make(map[int]*rpi.Pin),
 
 			// Sensors
 			sensorFrontMutex: sync.Mutex{},
@@ -100,4 +122,19 @@ func (r *Rover) Stop() {
 	}
 
 	r.closeMotorPins()
+}
+
+// Shutdown stops and shuts down the rover and closes all open GPIO pins. The rover shouldn't be used after this
+func (r *Rover) Shutdown() {
+	// Shutdown motors,
+	r.Stop()
+	// .. and leds
+	r.closeAllLEDs()
+
+	close(r.errorChan)
+	close(r.directionChan)
+
+	// Make sure that the last distance scan has returned
+	r.sensorFrontMutex.Lock()
+	r.sensorFrontMutex.Unlock()
 }
