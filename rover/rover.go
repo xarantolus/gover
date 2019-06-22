@@ -93,6 +93,11 @@ func (r *Rover) Directions() chan Direction {
 
 // SetDirection sets the current direction
 func (r *Rover) SetDirection(d Direction) {
+	// Don't stop if we already have that direction
+	if r.currentDirection == d {
+		return
+	}
+
 	// Stop before setting new direction
 	if r.motorsLocked {
 		r.Stop()
@@ -135,6 +140,10 @@ func (r *Rover) Stop() {
 	}
 
 	r.closeMotorPins()
+
+	// Notify
+	r.currentDirection = Stop
+	r.directionChan <- Stop
 }
 
 // Shutdown stops and shuts down the rover and closes all open GPIO pins. The rover shouldn't be used after this

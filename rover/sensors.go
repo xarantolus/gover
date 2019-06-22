@@ -60,8 +60,8 @@ func (r *Rover) DistanceFront() (cm float32, ok bool) {
 	}
 	endTime := time.Now()
 
-	r.checkErr(pinTrigger.Close(), "closing front sensor trigger pin %d", frontTrigger)
 	r.checkErr(pinEcho.Close(), "closing front sensor echo pin %d", frontEcho)
+	r.checkErr(pinTrigger.Close(), "closing front sensor trigger pin %d", frontTrigger)
 
 	dist := distanceFromSoundSpeed(endTime.Sub(startTime))
 

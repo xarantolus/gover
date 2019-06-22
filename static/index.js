@@ -111,11 +111,11 @@ socket.on("connect", function () {
         // Use certain tresholds to make sure we can stop
         if (frontback > 25) {
             direction = "REVERSE";
-        } else if (frontback < -10) {
+        } else if (frontback < -15) {
             direction = "FORWARD";
-        } else if (leftright > 10) {
+        } else if (leftright > 15) {
             direction = "RIGHT";
-        } else if (leftright < -10) {
+        } else if (leftright < -15) {
             direction = "LEFT";
         } else {
             // STOP when we aren't in the area

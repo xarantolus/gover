@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"./rover"
-	"./socket"
+	"github.com/xarantolus/gover/rover"
+	"github.com/xarantolus/gover/socket"
 )
 
 const port = "80"
@@ -19,7 +20,7 @@ func main() {
 	// Print all erros the rover encounters
 	go func() {
 		for err := range r.Errors() {
-			fmt.Println("Error: " + err.Error())
+			log.Println("Error: " + err.Error())
 		}
 	}()
 
@@ -41,7 +42,7 @@ func main() {
 	go func() {
 		<-sc
 
-		fmt.Println("Received shutdown signal, stopping rover and http server")
+		log.Println("Received shutdown signal, stopping rover and http server")
 		// Shutdown rover & http server
 		r.Shutdown()
 
@@ -50,7 +51,7 @@ func main() {
 		}
 	}()
 
-	fmt.Printf("Gover server listening on port %s\n", port)
+	log.Printf("Gover server listening on port %s\n", port)
 	err := server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(err)

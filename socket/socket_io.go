@@ -1,14 +1,13 @@
 package socket
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"sync"
 	"time"
 
-	"../rover"
-	"github.com/googollee/go-socket.io"
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/xarantolus/gover/rover"
 )
 
 var (
@@ -48,8 +47,8 @@ func CreateServer() *socketio.Server {
 					Distance: dist,
 					Ok:       ok,
 				})
-				// Try to send this signal once per 1/2 second
-				time.Sleep(500*time.Millisecond - time.Now().Sub(now))
+				// Try to send this signal once per 1/4 second
+				time.Sleep(250*time.Millisecond - time.Now().Sub(now))
 			} else {
 				time.Sleep(time.Second)
 			}
@@ -59,7 +58,7 @@ func CreateServer() *socketio.Server {
 	// Incoming connections
 	server.On("connection", func(so socketio.Socket) {
 		so.Join(defaultRoom)
-		fmt.Printf("Connected client %s\n", so.Id())
+		log.Printf("Connected client %s\n", so.Id())
 
 		// Send the initial direction
 		so.Emit("directionchanged", rov.CurrentDirection())
@@ -67,7 +66,7 @@ func CreateServer() *socketio.Server {
 		so.On("direction", func(d directionEvent) {
 			dir, ok := d.Direction()
 			if !ok {
-				fmt.Printf("Couldn't parse direction %s\n", d.RawDirection)
+				log.Printf("Couldn't parse direction %s\n", d.RawDirection)
 				return
 			}
 
@@ -77,7 +76,7 @@ func CreateServer() *socketio.Server {
 			// Only drop packages that aren't stop
 			if dir != rover.Stop && durationSinceSend > 3*time.Second {
 				// Drop package
-				fmt.Println("Dropped package")
+				log.Println("Dropped package")
 				return
 			}
 
