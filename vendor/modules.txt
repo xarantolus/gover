@@ -11,3 +11,8 @@ github.com/googollee/go-socket.io
 github.com/gorilla/websocket
 # github.com/nathan-osman/go-rpigpio v0.0.0-20160701025123-bce6190607da
 github.com/nathan-osman/go-rpigpio
+# github.com/simulatedsimian/joystick v1.0.1
+github.com/simulatedsimian/joystick
+# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
+golang.org/x/sys/unix
+golang.org/x/sys/windows
