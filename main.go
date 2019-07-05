@@ -10,6 +10,7 @@ import (
 
 	"github.com/xarantolus/gover/rover"
 	"github.com/xarantolus/gover/socket"
+	_ "github.com/xarantolus/gover/xbox360"
 )
 
 const port = "80"
