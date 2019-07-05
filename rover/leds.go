@@ -8,7 +8,7 @@ const (
 	// One cable needs to be connected to a Ground, another one to the Pin defined below
 
 	// frontLed is the status led that is on when the server is running. It goes off when the robot shuts down
-	frontLed = 17 // Pin 11, Ground is pin 06
+	frontLed = 17 // Physical pin 11, Ground is pin 06
 )
 
 // ToggleFrontLED toggles the front led of the robot

@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	frontTrigger = 23 // 16
-	frontEcho    = 24 // 18
+	frontTrigger = 23 // physical 16
+	frontEcho    = 24 // physical 18
 )
 
 // DistanceFront gets the distance from the front sensor in cm
