@@ -1,6 +1,7 @@
 package xbox360
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"time"
@@ -10,47 +11,48 @@ import (
 )
 
 func init() {
+	var tries int
 	go func() {
-		for {
-			// TODO: Check if this stops instantly after booting if the controller isn't connected yet
-			js, err := joystick.Open(0)
-			if err != nil {
-				log.Println("Error while setting up controller:", err.Error())
-				time.Sleep(time.Second * 2)
-				continue
+	retry:
+		js, err := joystick.Open(0)
+		if err != nil {
+			log.Printf("Error while setting up controller (try #%d): %s\n", tries, err.Error())
+
+			if tries == 10 {
+				log.Println("Exceeded reconnection limit for controller, the controller will not be available")
+				return
 			}
+			tries++
 
-			tick := time.NewTicker(time.Millisecond * 100)
+			time.Sleep(time.Second * 2)
+			goto retry
+		}
 
-			var rov = rover.Current()
-			stopped := make(chan bool)
-			go func() {
-				defer js.Close()
-				defer tick.Stop()
+		log.Printf("Successfully connected controller %s\n", js.Name())
 
-				defer rov.Stop() // In case of disconnect
+		tick := time.NewTicker(time.Millisecond * 100)
 
-				for {
-					state, err := js.Read()
-					if err != nil {
-						log.Printf("Controller disconnected (error: %s); you need to restart in order to reconnect", err.Error())
-						break
-					}
+		var rov = rover.Current()
+		go func() {
+			defer js.Close()
+			defer tick.Stop()
 
-					_, _, rest := buttonsCheckXY(state.Buttons)
+			defer rov.Stop() // In case of disconnect
 
-					lr, fr := leftStickInterpret(state.AxisData[0]), buttonsFRInterpret(rest)
-
-					rov.SetDirection(interpretDirections(lr, fr))
-					<-tick.C
+			for {
+				state, err := js.Read()
+				if err != nil {
+					panic(fmt.Errorf("Controller disconnected (error: %s); you need to restart in order to reconnect", err.Error()))
 				}
 
-				stopped <- true
-			}()
+				_, _, rest := buttonsCheckXY(state.Buttons)
 
-			<-stopped
-			time.Sleep(2500 * time.Millisecond)
-		}
+				lr, fr := leftStickInterpret(state.AxisData[0]), buttonsFRInterpret(rest)
+
+				rov.SetDirection(interpretDirections(lr, fr))
+				<-tick.C
+			}
+		}()
 	}()
 }
 
