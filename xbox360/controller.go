@@ -24,7 +24,7 @@ func init() {
 			}
 			tries++
 
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Second * 10)
 			goto retry
 		}
 
@@ -33,6 +33,7 @@ func init() {
 		tick := time.NewTicker(time.Millisecond * 100)
 
 		var rov = rover.Current()
+
 		go func() {
 			defer js.Close()
 			defer tick.Stop()
