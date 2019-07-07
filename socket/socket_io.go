@@ -48,7 +48,7 @@ func CreateServer() *socketio.Server {
 					Ok:       ok,
 				})
 				// Try to send this signal once per 1/4 second
-				time.Sleep(250*time.Millisecond - time.Now().Sub(now))
+				time.Sleep(250*time.Millisecond - time.Since(now))
 			} else {
 				time.Sleep(time.Second)
 			}
@@ -70,7 +70,7 @@ func CreateServer() *socketio.Server {
 				return
 			}
 
-			durationSinceSend := time.Now().Sub(d.Date)
+			durationSinceSend := time.Since(d.Date)
 			log.Printf("Direction: %v, duration=%s\n", dir, durationSinceSend)
 
 			// Only drop packages that aren't stop

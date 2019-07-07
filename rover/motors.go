@@ -90,7 +90,7 @@ func (r *Rover) outputMotors(val1, val2, val3, val4 bool) error {
 // canGoForward checks if the robot can go forward and stops it if it can't
 func (r *Rover) canGoForward() (canGo bool) {
 	// Make sure the rover doesn't run straight into a wall if we have a recent distance
-	if r.sensorFrontLastDistance < roverMinFrontDistanceCM && time.Now().Sub(r.sensorFrontLastDate) < 2*time.Second {
+	if r.sensorFrontLastDistance < roverMinFrontDistanceCM && time.Since(r.sensorFrontLastDate) < 2*time.Second {
 		r.SetDirection(Stop)
 		return false
 	}
