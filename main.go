@@ -13,7 +13,7 @@ import (
 	_ "github.com/xarantolus/gover/xbox360"
 )
 
-const port = "80"
+const port = "80" // TODO: Add deploy script with config file
 
 func main() {
 	var r = rover.Current()

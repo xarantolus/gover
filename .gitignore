@@ -1,3 +1,4 @@
 *.exe
 **debug
 gover
+deploy*
